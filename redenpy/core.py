@@ -32,11 +32,16 @@ class RedenPy:
 
             # Handle thousands separators and decimal points
             if cleaned.count(",") > 0 and cleaned.count(".") > 0:
+<<<<<<< HEAD
                 # Both exist → determine which is decimal separator by position
+=======
+                # Both exist -> determine which is decimal separator by position
+>>>>>>> 023652481e6e80fd5e4f645be78da7836bea2901
                 last_comma_pos = cleaned.rfind(",")
                 last_dot_pos = cleaned.rfind(".")
                 
                 if last_dot_pos > last_comma_pos:
+<<<<<<< HEAD
                     # Dot comes last → dot is decimal, comma is thousands
                     # e.g., "1,000,000.75"
                     cleaned = cleaned.replace(",", "")
@@ -65,6 +70,27 @@ class RedenPy:
                     pass  # keep dot as is
                 else:
                     # Likely thousands separator: "1.000" or "1.000000"
+=======
+                    # Dot comes last -> dot is decimal, comma is thousands
+                    # e.g., "1,000,000.75"
+                    cleaned = cleaned.replace(",", "")
+                else:
+                    # Comma comes last -> comma is decimal, dot is thousands
+                    # e.g., "1.000.000,75"
+                    cleaned = cleaned.replace(".", "")
+                    cleaned = cleaned.replace(",", ".")
+            elif cleaned.count(",") > 0:                
+                parts = cleaned.split(",")
+                if len(parts[-1]) <= 2 and len(parts) == 2:
+                    cleaned = cleaned.replace(",", ".")
+                else:
+                    cleaned = cleaned.replace(",", "")
+            elif cleaned.count(".") > 0:
+                parts = cleaned.split(".")
+                if len(parts[-1]) <= 2 and len(parts) == 2:
+                    pass 
+                else:
+>>>>>>> 023652481e6e80fd5e4f645be78da7836bea2901
                     cleaned = cleaned.replace(".", "")
 
             try:
