@@ -1,4 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
+import re
 
 class RedenPy:
     
@@ -13,24 +14,64 @@ class RedenPy:
         self.rule = rule
         self.digit = digit
 
-    def redenomination(self, money, fractional=False, cur_symbol='begin', output_type=str):
+    def redenomination(self, money, fractional=False, output_type=str):
         """
         Convert money according to redenomination rules.
 
         Args:
-            money (str | int | float | Decimal): The amount to convert
+            money (str | int | float | Decimal): The amount to convert. Can include symbols, e.g. "$ 1000", "1000 USD"
             fractional (bool): Whether to include fractional part
-            cur_symbol (str): 'begin' or 'end', position of currency symbol
             output_type (type): Type to return: str, Decimal, float, int
         Returns:
             str | Decimal | float | int: The redenominated value in the requested type
         """
-        # Convert string to Decimal if needed
+        # Convert input to Decimal
         if isinstance(money, str):
+            # Remove all non-digit, non-dot, non-comma characters
+            cleaned = re.sub(r"[^\d,\.]", "", money)
+
+            # Handle thousands separators and decimal points
+            if cleaned.count(",") > 0 and cleaned.count(".") > 0:
+                # Both exist → determine which is decimal separator by position
+                last_comma_pos = cleaned.rfind(",")
+                last_dot_pos = cleaned.rfind(".")
+                
+                if last_dot_pos > last_comma_pos:
+                    # Dot comes last → dot is decimal, comma is thousands
+                    # e.g., "1,000,000.75"
+                    cleaned = cleaned.replace(",", "")
+                else:
+                    # Comma comes last → comma is decimal, dot is thousands
+                    # e.g., "1.000.000,75"
+                    cleaned = cleaned.replace(".", "")
+                    cleaned = cleaned.replace(",", ".")
+            elif cleaned.count(",") > 0:
+                # Only comma exists
+                # Check if it's likely a decimal separator (2 digits after last comma)
+                parts = cleaned.split(",")
+                if len(parts[-1]) <= 2 and len(parts) == 2:
+                    # Likely decimal separator: "1000,50"
+                    cleaned = cleaned.replace(",", ".")
+                else:
+                    # Likely thousands separator: "1,000" or "1,000,000"
+                    cleaned = cleaned.replace(",", "")
+            elif cleaned.count(".") > 0:
+                # Only dot exists
+                parts = cleaned.split(".")
+                # If last part has exactly 1-2 digits, treat as decimal
+                # Otherwise treat as thousands separator
+                if len(parts[-1]) <= 2 and len(parts) == 2:
+                    # Likely decimal: "1000.50"
+                    pass  # keep dot as is
+                else:
+                    # Likely thousands separator: "1.000" or "1.000000"
+                    cleaned = cleaned.replace(".", "")
+
             try:
-                money = Decimal(money.replace(',', '').replace(' ', ''))
+                money = Decimal(cleaned)
             except Exception:
-                raise ValueError("Invalid money string")
+                raise ValueError(f"Invalid money string: {money}")
+
         else:
             money = Decimal(money)
 
@@ -42,26 +83,10 @@ class RedenPy:
         whole = int(money)
         frac = int((money - whole) * 100)
 
-        # Currency symbol (example)
-        symbol = "CUR"
+        # Format as string
+        result_str = f"{whole},{frac:02d}" if fractional else f"{whole}"
 
-        # Format output as string
-        result_str = None
-        match (fractional, cur_symbol, isinstance(money, Decimal)):
-            case False, 'begin', True:
-                result_str = f"{symbol}{whole}"
-            case False, 'end', True:
-                result_str = f"{whole}{symbol}"
-            case True, 'begin', True:
-                result_str = f"{symbol}{whole},{frac:02d}"
-            case True, 'end', True:
-                result_str = f"{whole},{frac:02d}{symbol}"
-            case False, _, False:
-                result_str = f"{whole}"
-            case True, _, False:
-                result_str = f"{whole},{frac:02d}"
-
-        # Convert result to requested type
+        # Convert to requested output type
         if output_type == str:
             return result_str
         elif output_type == Decimal:
