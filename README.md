@@ -101,7 +101,15 @@ Performs the redenomination on a given money value.
 ```python
 redenomination_with_rules(money, output_type=str)
 ```
+
 accepts a comprehensive rule dictionary that allows full customization of the redenomination process. Below are all possible rules that can be configured.
+
+- money (str | int | float | Decimal): The amount to convert.
+- output_type (type): The desired return type for the converted value.
+    - str: Returns a formatted string. Behavior is controlled by fractional.
+    - Decimal: Returns the redenominated value as a Decimal object, rounded to 2 decimal places.
+    - float: Returns the redenominated value as a float.
+    - int: Returns the redenominated value as an int (note: this truncates any decimal part after rounding, e.g., 1575.51 becomes 1575).
 
 ## Complete Rule Reference
 

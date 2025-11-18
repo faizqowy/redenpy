@@ -1,6 +1,6 @@
 [project]
 name = "RedenPy"
-version = "0.0.2"
+version = "0.1.0"
 description = "A Python library for currency redenomination"
 authors = [{name="Faiz Qowy", email="faizislamicqowy@gmail.com"}]
 readme = "README.md"
